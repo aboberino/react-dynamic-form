@@ -1,19 +1,14 @@
-import { useTheme } from "@emotion/react"
-import { Input, Select, Card, Button, Stack, Alert, useMantineTheme, SimpleGrid } from "@mantine/core"
-import { IconAlertCircle } from "@tabler/icons"
+import { SimpleGrid } from "@mantine/core"
 import Head from "next/head"
 import { trpc } from "../utils/trpc"
 import styles from "./index.module.css"
-import { BlocInput, Bloc, BlocInputTypeOption } from "@prisma/client"
 import BlocComponent from "../components/BlocComponent"
 
 export default function Home() {
-  const { data, error, isLoading } = trpc.bloc.getByCode.useQuery({ code: 'FORMULAIRE_INSCRIPTION' })
+  const { data, error } = trpc.bloc.getByCode.useQuery({ code: 'FORMULAIRE_INSCRIPTION' })
   const { data: blocTeletravail } = trpc.bloc.getByCode.useQuery({ code: 'FORMULAIRE_TELETRAVAIL' })
 
-  if (error) return <></>
-  if (!data) return <></>
-  const { id, code, description, inputs, title } = data
+  if (error || !data ) return <></>
   return (
     <>
       <Head>
@@ -29,7 +24,7 @@ export default function Home() {
 
           <div>
             <SimpleGrid cols={3}>
-              {data && <BlocComponent id={id} code={code} description={description} inputs={inputs} title={title} />}
+              {data && <BlocComponent id={data.id} code={data.code} description={data.description} inputs={data.inputs} title={data.title} />}
               {blocTeletravail && <BlocComponent id={blocTeletravail.id} code={blocTeletravail.code} description={blocTeletravail.description} inputs={blocTeletravail.inputs} title={blocTeletravail.title} />}
 
             </SimpleGrid>
