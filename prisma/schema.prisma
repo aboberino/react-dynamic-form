@@ -1,0 +1,36 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+model BlocInputTypeOption {
+    id          Int        @id @default(autoincrement())
+    value       String
+    label       String
+    BlocInput   BlocInput? @relation(fields: [blocInputId], references: [id])
+    blocInputId Int?
+}
+
+model BlocInput {
+    id      Int                   @id @default(autoincrement())
+    name    String
+    type    String
+    options BlocInputTypeOption[]
+    bloc    Bloc                  @relation(fields: [blocId], references: [id])
+    blocId  Int
+}
+
+model Bloc {
+    id          Int         @id @default(autoincrement())
+    code        String
+    title       String
+    description String?
+    inputs      BlocInput[]
+}

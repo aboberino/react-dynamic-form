@@ -1,0 +1,44 @@
+{
+  "name": "react-dynamic-form",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "postinstall": "prisma generate",
+    "lint": "next lint",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.10.4",
+    "@emotion/server": "^11.10.0",
+    "@mantine/core": "^5.4.2",
+    "@mantine/next": "^5.4.2",
+    "@prisma/client": "^4.1.0",
+    "@tabler/icons": "^1.101.0",
+    "@tanstack/react-query": "^4.3.9",
+    "@trpc/client": "10.0.0-proxy-beta.2",
+    "@trpc/next": "10.0.0-proxy-beta.2",
+    "@trpc/react": "10.0.0-proxy-beta.2",
+    "@trpc/server": "10.0.0-proxy-beta.2",
+    "next": "12.3.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "superjson": "1.9.1",
+    "zod": "^3.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "18.0.0",
+    "@types/react": "18.0.14",
+    "@types/react-dom": "18.0.5",
+    "@typescript-eslint/eslint-plugin": "^5.33.0",
+    "@typescript-eslint/parser": "^5.33.0",
+    "eslint": "8.22.0",
+    "eslint-config-next": "12.3.1",
+    "prisma": "^4.1.0",
+    "typescript": "4.7.4"
+  },
+  "ct3aMetadata": {
+    "initVersion": "6.0.0-next.ae4f5b8"
+  }
+}
