@@ -1,34 +1,11 @@
-import { Accordion, ActionIcon, Alert, Box, Button, Card, Checkbox, Divider, Group, Input, Menu, Select, Stack, Textarea, useMantineTheme } from "@mantine/core"
+import { Accordion, ActionIcon, Alert, Badge, Box, Button, Card, Checkbox, Divider, Group, Input, Menu, Select, Stack, Textarea, useMantineTheme } from "@mantine/core"
 import { AccordionControlProps } from "@mantine/core/lib/Accordion/AccordionControl/AccordionControl"
 import { Bloc, BlocInput, BlocInputTypeOption } from "@prisma/client";
-import { IconDots, IconTrash, IconChevronDown, IconPlus, IconBrandFlickr, IconAlignJustified, IconCheckbox, IconAlertCircle } from "@tabler/icons";
+import { IconDots, IconTrash, IconChevronDown, IconPlus, IconBrandFlickr, IconAlignJustified, IconCheckbox, IconAlertCircle, IconEdit, IconDotsVertical } from "@tabler/icons";
 import { useState } from "react";
 import BlocComponent, { BlocInputParams, BlocParams } from "../components/BlocComponent";
 import styles from "./create.module.css"
 import { useForm } from '@mantine/form'
-
-{/* <Accordion chevronPosition="left" sx={{ maxWidth: 400 }} mx="auto">
-                        <div>oui</div>
-
-                        <Accordion.Item value="item-1">
-                            <AccordionControl>Control 1</AccordionControl>
-                            <Accordion.Panel>Panel 1</Accordion.Panel>
-                        </Accordion.Item>
-
-                        <Accordion.Item value="item-2">
-                            <AccordionControl>Control 2</AccordionControl>
-                            <Accordion.Panel>Panel 2</Accordion.Panel>
-                        </Accordion.Item>
-
-                        <Accordion.Item value="item-3">
-                            <AccordionControl>Control 3</AccordionControl>
-                            <Accordion.Panel>Panel 3</Accordion.Panel>
-                        </Accordion.Item>
-                    </Accordion> */}
-
-type InputType = {
-
-}
 
 function getRandomNumber() {
     return Math.floor(Math.random() * 1000000)
@@ -54,6 +31,8 @@ export default function Create() {
             id: getRandomNumber(),
             name: 'Default',
             type: type,
+            blocId: form.values.id,
+            options: []
         } as (BlocInput & { options: BlocInputTypeOption[] })
         form.insertListItem('inputs', input)
     }
@@ -86,7 +65,9 @@ export default function Create() {
                                 <ButtonInput onAddInput={onAddInput} />
                                 <Alert style={{ width: '100%' }} icon={<IconAlertCircle size={16} />} title="Ajoutez des champs en cliquant sur le bouton ci-dessus."> </Alert>
                             </div>
-                            {form.values.inputs?.map((input, index) => <InputComponent key={input.id} blocInput={input} form={form.getInputProps(`inputs.${index}.name`)} listIndex={index} onDeleteInput={onDeleteInput} />)}
+                            <Stack spacing='xl'>
+                                {form.values.inputs?.map((input, index) => <InputComponent key={input.id} blocInput={input} form={form.getInputProps(`inputs.${index}.name`)} listIndex={index} onDeleteInput={onDeleteInput} />)}
+                            </Stack>
 
                             <Group position="right" mt="md">
                                 <Button type="submit" variant="gradient">Enregistrer</Button>
@@ -108,14 +89,47 @@ function InputComponent({ blocInput, form, listIndex, onDeleteInput }: BlocInput
     switch (blocInput.type) {
         case 'text':
             return <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <ActionIcon variant="light" size='lg' color='red' onClick={() => onDeleteInput(listIndex)} ><IconTrash size={16} /></ActionIcon>
+                <Menu shadow="md" width={160} withArrow>
+                    <Menu.Target>
+                        <ActionIcon variant="light" size='lg' color='blue' ><IconDotsVertical size={16} /></ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                        <Menu.Label sx={{ textAlign: 'center' }}><Badge color="cyan" radius="sm" sx={{ width: 'min-content' }}>Text</Badge></Menu.Label>
+                        <Menu.Divider />
+                        <Menu.Item color="red" icon={<IconTrash size={14} />} onClick={() => onDeleteInput(listIndex)}>Delete</Menu.Item>
+                    </Menu.Dropdown>
+                </Menu>
+
+                <Badge color="cyan" radius="sm" sx={{ minWidth: 70, height: 36 }}>Text</Badge>
                 <Group>
-                    <Input variant="filled" id={id} {...form} />
+                    <Input variant="filled" id={id} placeholder="Label de l'input" {...form} />
                     <Checkbox label="Required" />
                 </Group>
-            </div>
+            </div >
+
         case 'select':
-            return <Select label={blocInput.name} placeholder="Choisir" data={blocInput.options} {...form} />
+            return (
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <Menu shadow="md" width={160} withArrow>
+                        <Menu.Target>
+                            <ActionIcon variant="light" size='lg' color='blue' ><IconDotsVertical size={16} /></ActionIcon>
+                        </Menu.Target>
+                        <Menu.Dropdown>
+                            <Menu.Label sx={{ textAlign: 'center' }}><Badge color="cyan" radius="sm" sx={{ width: 'min-content' }}>Select</Badge></Menu.Label>
+                            <Menu.Item icon={<IconEdit size={14} />}>Edit</Menu.Item>
+                            <Menu.Divider />
+                            <Menu.Item color="red" icon={<IconTrash size={14} />} onClick={() => onDeleteInput(listIndex)}>Delete</Menu.Item>
+
+                        </Menu.Dropdown>
+                    </Menu>
+
+                    <Badge color="violet" radius="sm" sx={{ minWidth: 70, height: 36 }}>Select</Badge>
+                    <Group>
+                        <Input variant="filled" id={id} placeholder="Label de l'input" {...form} />
+                        <Checkbox label="Required" />
+                    </Group>
+                </div>
+            )
 
         default:
             return <></>
