@@ -9,8 +9,9 @@ export const blocRouter = t.router({
         .input(z.object({ code: z.string() }))
         .query(({ ctx, input }) => {
             const { code } = input
+            console.log({ code })
             // return ctx.prisma.bloc.findFirst({ where: { code: input.code }, include: { inputs: true } })
-            return ctx.prisma.bloc.findFirst({ 
+            return ctx.prisma.bloc.findFirst({
                 where: { code },
                 include: {
                     inputs: {

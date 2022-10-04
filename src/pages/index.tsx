@@ -1,14 +1,16 @@
-import { SimpleGrid } from "@mantine/core"
+import { Button, SimpleGrid } from "@mantine/core"
 import Head from "next/head"
 import { trpc } from "../utils/trpc"
 import styles from "./index.module.css"
 import BlocComponent from "../components/BlocComponent"
+import { IconDatabase } from "@tabler/icons"
+import { useRouter } from "next/router"
 
 export default function Home() {
-  const { data, error } = trpc.bloc.getByCode.useQuery({ code: 'FORMULAIRE_INSCRIPTION' })
-  const { data: blocTeletravail } = trpc.bloc.getByCode.useQuery({ code: 'FORMULAIRE_TELETRAVAIL' })
-
-  if (error || !data ) return <></>
+  const { data, error } = trpc.bloc.getByCode.useQuery({ code: 'FORMULAIRE_INSCRIPTION_DAKAR' })
+  const router = useRouter()
+  console.log(error)
+  console.log(data)
   return (
     <>
       <Head>
@@ -23,10 +25,13 @@ export default function Home() {
           </h1>
 
           <div>
+
+            <Button leftIcon={<IconDatabase />} variant="white" onClick={() => router.push('/create')}>
+              Add a form
+            </Button>
+
             <SimpleGrid cols={3}>
               {data && <BlocComponent id={data.id} code={data.code} description={data.description} inputs={data.inputs} title={data.title} />}
-              {blocTeletravail && <BlocComponent id={blocTeletravail.id} code={blocTeletravail.code} description={blocTeletravail.description} inputs={blocTeletravail.inputs} title={blocTeletravail.title} />}
-
             </SimpleGrid>
           </div>
 

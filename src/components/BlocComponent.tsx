@@ -3,13 +3,13 @@ import { BlocInput, Bloc, BlocInputTypeOption } from "@prisma/client"
 import { IconAlertCircle } from "@tabler/icons"
 
 
-type BlocParams = Bloc & {
+export type BlocParams = Bloc & {
     inputs: (BlocInput & {
         options: BlocInputTypeOption[]
     })[]
 }
 
-type BlocInputParams = {
+export type BlocInputParams = {
     blocInput: BlocInput & {
         options: BlocInputTypeOption[]
     }
@@ -18,14 +18,14 @@ type BlocInputParams = {
 export default function BlocComponent(bloc: BlocParams) {
 
     return (
-        <Card shadow="sm" p="lg" radius="md" withBorder sx={{ width: 350 }}>
+        <Card shadow="sm" p="lg" radius="md" withBorder>
             <h2>{bloc.title}</h2>
             <Stack>
 
                 {bloc.description && <Alert icon={<IconAlertCircle size={16} />}>{bloc.description}</Alert>}
 
                 {bloc.inputs.map((input, i) => (
-                    <InputComponent key={i} blocInput={input} />
+                    <InputComponent key={i} blocInput={input} showLabel />
                 ))}
 
                 <Button variant="light" color="blue" fullWidth mt="md" radius="md">
@@ -37,11 +37,13 @@ export default function BlocComponent(bloc: BlocParams) {
 }
 
 
-function InputComponent({ blocInput }: BlocInputParams) {
-
+export function InputComponent({ blocInput, showLabel }: BlocInputParams & { showLabel?: boolean }) {
+    const id = blocInput.id + blocInput.name
     switch (blocInput.type) {
         case 'text':
-            return <Input variant="filled" placeholder={blocInput.name} />
+            return showLabel ? <Input.Wrapper id={id} label={blocInput.name}>
+                <Input variant="filled" id={id} />
+            </Input.Wrapper> : <Input variant="filled" id={id} />
 
         case 'select':
             return <Select label={blocInput.name} placeholder="Choisir" data={blocInput.options} />
