@@ -1,9 +1,9 @@
-import { Button, SimpleGrid } from "@mantine/core"
+import { Button, SimpleGrid, Stack } from "@mantine/core"
 import Head from "next/head"
 import { trpc } from "../utils/trpc"
 import styles from "./index.module.css"
 import BlocComponent from "../components/BlocComponent"
-import { IconDatabase } from "@tabler/icons"
+import { IconForms } from "@tabler/icons"
 import { useRouter } from "next/router"
 
 export default function Home() {
@@ -24,16 +24,19 @@ export default function Home() {
             <span className={styles.titlePink}>Dynamic form</span>
           </h1>
 
-          <div>
 
-            <Button leftIcon={<IconDatabase />} variant="white" onClick={() => router.push('/create')}>
-              Add a form
+          <Stack spacing='xl'>
+
+            <Button leftIcon={<IconForms />} variant="white" onClick={() => router.push('/create')}>
+              Create new form
             </Button>
 
-            <SimpleGrid cols={3}>
-              {data && <BlocComponent id={data.id} code={data.code} description={data.description} inputs={data.inputs} title={data.title} />}
-            </SimpleGrid>
-          </div>
+          </Stack>
+
+
+          <SimpleGrid cols={3}>
+            {data && <BlocComponent id={data.id} code={data.code} description={data.description} inputs={data.inputs} title={data.title} sx={{width: 400}} />}
+          </SimpleGrid>
 
         </div>
       </div>

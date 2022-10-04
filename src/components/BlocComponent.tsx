@@ -1,4 +1,4 @@
-import { Input, Select, Card, Stack, Alert, Button } from "@mantine/core"
+import { Input, Select, Card, Stack, Alert, Button, Sx } from "@mantine/core"
 import { BlocInput, Bloc, BlocInputTypeOption } from "@prisma/client"
 import { IconAlertCircle } from "@tabler/icons"
 
@@ -15,10 +15,10 @@ export type BlocInputParams = {
     }
 }
 
-export default function BlocComponent(bloc: BlocParams) {
+export default function BlocComponent(bloc: BlocParams & { sx?: Sx }) {
 
     return (
-        <Card shadow="sm" p="lg" radius="md" withBorder>
+        <Card shadow="sm" p="lg" radius="md" withBorder sx={bloc.sx}>
             <h2>{bloc.title}</h2>
             <Stack>
 
