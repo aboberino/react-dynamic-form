@@ -22,6 +22,7 @@ model BlocInput {
   blocId  Int
   bloc    Bloc                  @relation(fields: [blocId], references: [id])
   options BlocInputTypeOption[]
+  order   Int
 }
 
 model Bloc {

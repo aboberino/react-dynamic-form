@@ -1,12 +1,16 @@
-import { Accordion, ActionIcon, Alert, Badge, Box, Button, Card, Checkbox, Divider, Group, Input, Menu, Modal, Select, Stack, Textarea, useMantineTheme } from "@mantine/core"
-import { AccordionControlProps } from "@mantine/core/lib/Accordion/AccordionControl/AccordionControl"
-import { Bloc, BlocInput, BlocInputTypeOption } from "@prisma/client";
-import { IconDots, IconTrash, IconChevronDown, IconPlus, IconBrandFlickr, IconAlignJustified, IconCheckbox, IconAlertCircle, IconEdit, IconDotsVertical } from "@tabler/icons";
+import { ActionIcon, Badge, Button, Card, Checkbox, Divider, Group, Input, Menu, Stack, Textarea, useMantineTheme } from "@mantine/core"
+import { BlocInput, BlocInputTypeOption } from "@prisma/client";
+import { IconTrash, IconChevronDown, IconPlus, IconBrandFlickr, IconAlignJustified, IconCheckbox, IconEdit, IconDotsVertical, IconGripVertical } from "@tabler/icons";
 import { useState } from "react";
 import BlocComponent, { BlocInputParams, BlocParams } from "../components/BlocComponent";
 import styles from "./create.module.css"
 import { useForm } from '@mantine/form'
 import ModalOptions from "../components/ModalOptions/ModalOptions";
+import { DndContext, useSensor, PointerSensor, closestCenter, DragCancelEvent, UniqueIdentifier } from "@dnd-kit/core"
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { CSS } from '@dnd-kit/utilities'
+import { restrictToVerticalAxis, restrictToParentElement } from '@dnd-kit/modifiers'
+
 
 function getRandomNumber() {
     return Math.floor(Math.random() * 1000000)
@@ -16,7 +20,7 @@ export default function Create() {
     const theme = useMantineTheme()
 
     const [opened, setOpened] = useState(false)
-    const [currentOptionIndex, setCurrentOptionIndex] = useState(-1)
+    const [currentOptionIndex, setCurrentOptionIndex] = useState(0)
 
     const form = useForm<BlocParams>({
         initialValues: {
@@ -29,13 +33,14 @@ export default function Create() {
                     blocId: 481260,
                     id: 689087,
                     name: "Pays",
+                    type: "select",
+                    order: 0,
                     options: [{
                         id: 88948489,
                         value: 'France',
                         label: 'France',
                         blocInputId: 689087,
                     }],
-                    type: "select",
                 }
             ]
         },
@@ -50,7 +55,8 @@ export default function Create() {
             name: 'Default',
             type: type,
             blocId: form.values.id,
-            options: []
+            options: [],
+            order: form.values.inputs.length,
         } as (BlocInput & { options: BlocInputTypeOption[] })
         form.insertListItem('inputs', input)
     }
@@ -60,7 +66,19 @@ export default function Create() {
     }
 
     console.log('rerender')
-    console.log(form.values.inputs)
+
+    const sensors = [useSensor(PointerSensor)]
+
+    function handleDragEnd({ active, over }: DragCancelEvent) {
+        if (over) {
+            if (active.id !== over.id) {
+                const convertUIDToNumber = (id: UniqueIdentifier) => typeof id === 'string' ? parseInt(id) : id
+                const oldIndex = form.values.inputs.findIndex(input => input.id === convertUIDToNumber(active.id))
+                const newIndex = form.values.inputs.findIndex(input => input.id === convertUIDToNumber(over.id))
+                form.reorderListItem('inputs', { from: oldIndex, to: newIndex })
+            }
+        }
+    }
 
     return (
         <div className={styles.containerOuter}>
@@ -69,7 +87,7 @@ export default function Create() {
             </h1>
             <div className={styles.containerInner}>
 
-                <ModalOptions opened={opened} setOpened={setOpened} form={form} index={currentOptionIndex}/>
+                <ModalOptions opened={opened} setOpened={setOpened} form={form} index={currentOptionIndex} />
 
                 <Card shadow="sm" p="lg" radius="md" sx={{ overflow: 'visible' }} withBorder>
                     <form onSubmit={form.onSubmit((values) => console.log(values))}>
@@ -85,8 +103,20 @@ export default function Create() {
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                 <ButtonInput onAddInput={onAddInput} />
                             </div>
-                            <Stack spacing='xl'>
-                                {form.values.inputs?.map((input, index) => <InputComponent key={input.id} blocInput={input} form={form.getInputProps(`inputs.${index}.name`)} listIndex={index} setCurrentOptionIndex={setCurrentOptionIndex} onDeleteInput={onDeleteInput} setOpened={setOpened} />)}
+                            <Stack spacing='xs'>
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={handleDragEnd}
+                                    modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+                                >
+                                    <SortableContext
+                                        items={form.values.inputs.map(i => i.id)}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        {form.values.inputs?.map((input, i) => <InputComponent key={input.id} blocInput={input} form={form.getInputProps(`inputs.${i}.name`)} listIndex={i} setCurrentOptionIndex={setCurrentOptionIndex} onDeleteInput={onDeleteInput} setOpened={setOpened} />)}
+                                    </SortableContext>
+                                </DndContext>
                             </Stack>
 
                             <Group position="right" mt="md">
@@ -107,6 +137,8 @@ export default function Create() {
 function InputComponent({ blocInput, form, listIndex, setCurrentOptionIndex, onDeleteInput, setOpened }: BlocInputParams & { form?: any, listIndex: number, setCurrentOptionIndex: (v: number) => void, onDeleteInput: (index: number) => void, setOpened: (bool: boolean) => void }) {
     const id = blocInput.id + blocInput.name
 
+    const { setNodeRef, attributes, listeners, transition, transform } = useSortable({ id: blocInput.id })
+
     const toCapitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
     const getColor = (type: string | 'text' | 'select') => {
         switch (type) {
@@ -116,9 +148,15 @@ function InputComponent({ blocInput, form, listIndex, setCurrentOptionIndex, onD
         }
     }
 
+
+    const onEdit = () => {
+        setCurrentOptionIndex(listIndex)
+        setOpened(true)
+    }
+
     const menu = <Menu shadow="md" width={160} withArrow>
         <Menu.Target>
-            <ActionIcon variant='transparent' size='lg' color='blue' ><IconDotsVertical size={16} /></ActionIcon>
+            <ActionIcon variant='light' size='lg' color='blue' ><IconDotsVertical size={16} /></ActionIcon>
         </Menu.Target>
 
         <Menu.Dropdown>
@@ -126,24 +164,28 @@ function InputComponent({ blocInput, form, listIndex, setCurrentOptionIndex, onD
                 <Badge color={getColor(blocInput.type)} radius="sm" sx={{ width: '100%' }}>{toCapitalize(blocInput.type)}</Badge>
             </Menu.Label>
 
-            {blocInput.type === 'select' && <Menu.Item icon={<IconEdit size={14} />} onClick={() => {
-                setCurrentOptionIndex(listIndex)
-                setOpened(true)
-            }}>Edit</Menu.Item>}
+            {blocInput.type === 'select' && <Menu.Item icon={<IconEdit size={14} />} onClick={onEdit}>Options</Menu.Item>}
             <Menu.Divider />
             <Menu.Item color="red" icon={<IconTrash size={14} />} onClick={() => onDeleteInput(listIndex)}>Delete</Menu.Item>
         </Menu.Dropdown>
     </Menu>
 
+    const style = {
+        transition,
+        transform: CSS.Transform.toString(transform),
+    }
+
     return (
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            {menu}
+        <div  ref={setNodeRef} {...attributes}  style={{ display: 'flex', gap: 6, alignItems: 'center', ...style }}>
+            <ActionIcon {...listeners}  variant='transparent' size='lg' color='blue'><IconGripVertical size={16} /></ActionIcon>
+
 
             <Badge color={getColor(blocInput.type)} radius="sm" sx={{ minWidth: 70, height: 36 }}>{toCapitalize(blocInput.type)}</Badge>
-            <Group>
-                <Input variant="filled" id={id} placeholder="Label de l'input" {...form} />
-                <Checkbox label="Required" />
-            </Group>
+            <Input variant="filled" id={id} placeholder="Label de l'input" {...form} />
+            <Checkbox sx={{ marginLeft: 12 }} label="Required" />
+            <div style={{ marginLeft: 'auto' }}>
+                {menu}
+            </div>
         </div>
     )
 }
@@ -169,16 +211,4 @@ function ButtonInput({ onAddInput }: { onAddInput: (type: string) => void }) {
             </Menu>
         </div>
     )
-}
-
-
-function AccordionControl(props: AccordionControlProps) {
-    return (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Accordion.Control {...props} />
-            <ActionIcon size="lg">
-                <IconDots size={16} />
-            </ActionIcon>
-        </Box>
-    );
 }
