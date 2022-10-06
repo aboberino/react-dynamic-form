@@ -1,4 +1,4 @@
-import { Accordion, ActionIcon, Alert, Badge, Box, Button, Card, Checkbox, Divider, Group, Input, Menu, Select, Stack, Textarea, useMantineTheme } from "@mantine/core"
+import { Accordion, ActionIcon, Alert, Badge, Box, Button, Card, Checkbox, Divider, Group, Input, Menu, Modal, Select, Stack, Textarea, useMantineTheme } from "@mantine/core"
 import { AccordionControlProps } from "@mantine/core/lib/Accordion/AccordionControl/AccordionControl"
 import { Bloc, BlocInput, BlocInputTypeOption } from "@prisma/client";
 import { IconDots, IconTrash, IconChevronDown, IconPlus, IconBrandFlickr, IconAlignJustified, IconCheckbox, IconAlertCircle, IconEdit, IconDotsVertical } from "@tabler/icons";
@@ -6,12 +6,17 @@ import { useState } from "react";
 import BlocComponent, { BlocInputParams, BlocParams } from "../components/BlocComponent";
 import styles from "./create.module.css"
 import { useForm } from '@mantine/form'
+import ModalOptions from "../components/ModalOptions/ModalOptions";
 
 function getRandomNumber() {
     return Math.floor(Math.random() * 1000000)
 }
 
 export default function Create() {
+    const theme = useMantineTheme()
+
+    const [opened, setOpened] = useState(false)
+    const [currentOptionIndex, setCurrentOptionIndex] = useState(-1)
 
     const form = useForm<BlocParams>({
         initialValues: {
@@ -19,7 +24,20 @@ export default function Create() {
             description: '',
             id: getRandomNumber(),
             code: '',
-            inputs: []
+            inputs: [
+                {
+                    blocId: 481260,
+                    id: 689087,
+                    name: "Pays",
+                    options: [{
+                        id: 88948489,
+                        value: 'France',
+                        label: 'France',
+                        blocInputId: 689087,
+                    }],
+                    type: "select",
+                }
+            ]
         },
         validate: {
             title: (value) => value !== '' ? null : 'Invalid email',
@@ -42,6 +60,7 @@ export default function Create() {
     }
 
     console.log('rerender')
+    console.log(form.values.inputs)
 
     return (
         <div className={styles.containerOuter}>
@@ -49,6 +68,8 @@ export default function Create() {
                 <span className={styles.titlePink}>Create a new form</span>
             </h1>
             <div className={styles.containerInner}>
+
+                <ModalOptions opened={opened} setOpened={setOpened} form={form} index={currentOptionIndex}/>
 
                 <Card shadow="sm" p="lg" radius="md" sx={{ overflow: 'visible' }} withBorder>
                     <form onSubmit={form.onSubmit((values) => console.log(values))}>
@@ -61,12 +82,11 @@ export default function Create() {
                             </Input.Wrapper>
 
                             <Divider />
-                            <div style={{ display: 'flex', gap: 8 }}>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                 <ButtonInput onAddInput={onAddInput} />
-                                <Alert style={{ width: '100%' }} icon={<IconAlertCircle size={16} />} title="Ajoutez des champs en cliquant sur le bouton ci-dessus."> </Alert>
                             </div>
                             <Stack spacing='xl'>
-                                {form.values.inputs?.map((input, index) => <InputComponent key={input.id} blocInput={input} form={form.getInputProps(`inputs.${index}.name`)} listIndex={index} onDeleteInput={onDeleteInput} />)}
+                                {form.values.inputs?.map((input, index) => <InputComponent key={input.id} blocInput={input} form={form.getInputProps(`inputs.${index}.name`)} listIndex={index} setCurrentOptionIndex={setCurrentOptionIndex} onDeleteInput={onDeleteInput} setOpened={setOpened} />)}
                             </Stack>
 
                             <Group position="right" mt="md">
@@ -84,56 +104,48 @@ export default function Create() {
 }
 
 
-function InputComponent({ blocInput, form, listIndex, onDeleteInput }: BlocInputParams & { form?: any, listIndex: number, onDeleteInput: (index: number) => void }) {
+function InputComponent({ blocInput, form, listIndex, setCurrentOptionIndex, onDeleteInput, setOpened }: BlocInputParams & { form?: any, listIndex: number, setCurrentOptionIndex: (v: number) => void, onDeleteInput: (index: number) => void, setOpened: (bool: boolean) => void }) {
     const id = blocInput.id + blocInput.name
-    switch (blocInput.type) {
-        case 'text':
-            return <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <Menu shadow="md" width={160} withArrow>
-                    <Menu.Target>
-                        <ActionIcon variant="light" size='lg' color='blue' ><IconDotsVertical size={16} /></ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                        <Menu.Label sx={{ textAlign: 'center' }}><Badge color="cyan" radius="sm" sx={{ width: 'min-content' }}>Text</Badge></Menu.Label>
-                        <Menu.Divider />
-                        <Menu.Item color="red" icon={<IconTrash size={14} />} onClick={() => onDeleteInput(listIndex)}>Delete</Menu.Item>
-                    </Menu.Dropdown>
-                </Menu>
 
-                <Badge color="cyan" radius="sm" sx={{ minWidth: 70, height: 36 }}>Text</Badge>
-                <Group>
-                    <Input variant="filled" id={id} placeholder="Label de l'input" {...form} />
-                    <Checkbox label="Required" />
-                </Group>
-            </div >
-
-        case 'select':
-            return (
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <Menu shadow="md" width={160} withArrow>
-                        <Menu.Target>
-                            <ActionIcon variant="light" size='lg' color='blue' ><IconDotsVertical size={16} /></ActionIcon>
-                        </Menu.Target>
-                        <Menu.Dropdown>
-                            <Menu.Label sx={{ textAlign: 'center' }}><Badge color="cyan" radius="sm" sx={{ width: 'min-content' }}>Select</Badge></Menu.Label>
-                            <Menu.Item icon={<IconEdit size={14} />}>Edit</Menu.Item>
-                            <Menu.Divider />
-                            <Menu.Item color="red" icon={<IconTrash size={14} />} onClick={() => onDeleteInput(listIndex)}>Delete</Menu.Item>
-
-                        </Menu.Dropdown>
-                    </Menu>
-
-                    <Badge color="violet" radius="sm" sx={{ minWidth: 70, height: 36 }}>Select</Badge>
-                    <Group>
-                        <Input variant="filled" id={id} placeholder="Label de l'input" {...form} />
-                        <Checkbox label="Required" />
-                    </Group>
-                </div>
-            )
-
-        default:
-            return <></>
+    const toCapitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
+    const getColor = (type: string | 'text' | 'select') => {
+        switch (type) {
+            case 'text': return 'cyan'
+            case 'select': return 'violet'
+            default: return 'blue'
+        }
     }
+
+    const menu = <Menu shadow="md" width={160} withArrow>
+        <Menu.Target>
+            <ActionIcon variant='transparent' size='lg' color='blue' ><IconDotsVertical size={16} /></ActionIcon>
+        </Menu.Target>
+
+        <Menu.Dropdown>
+            <Menu.Label sx={{ textAlign: 'center' }}>
+                <Badge color={getColor(blocInput.type)} radius="sm" sx={{ width: '100%' }}>{toCapitalize(blocInput.type)}</Badge>
+            </Menu.Label>
+
+            {blocInput.type === 'select' && <Menu.Item icon={<IconEdit size={14} />} onClick={() => {
+                setCurrentOptionIndex(listIndex)
+                setOpened(true)
+            }}>Edit</Menu.Item>}
+            <Menu.Divider />
+            <Menu.Item color="red" icon={<IconTrash size={14} />} onClick={() => onDeleteInput(listIndex)}>Delete</Menu.Item>
+        </Menu.Dropdown>
+    </Menu>
+
+    return (
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            {menu}
+
+            <Badge color={getColor(blocInput.type)} radius="sm" sx={{ minWidth: 70, height: 36 }}>{toCapitalize(blocInput.type)}</Badge>
+            <Group>
+                <Input variant="filled" id={id} placeholder="Label de l'input" {...form} />
+                <Checkbox label="Required" />
+            </Group>
+        </div>
+    )
 }
 
 function ButtonInput({ onAddInput }: { onAddInput: (type: string) => void }) {
